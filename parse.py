@@ -17,7 +17,7 @@ def merge_patterns(p1, p2):
 			l.insert(index, i)
 	return l
 
-sched = transitfeed.Loader('/home/matt/Downloads/rail_data.zip').Load()
+sched = transitfeed.Loader('rail_data.zip').Load()
 routes = {}
 for route in sched.GetRouteList():
 	routes[route.route_id] = {'name': route.route_long_name, 'route': []}
