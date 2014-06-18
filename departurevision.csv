@@ -1,4 +1,4 @@
-Aberdeen-Matawan,AM
+Matawan,AM
 Absecon,AB
 Allendale,AZ
 Allenhurst,AH
@@ -6,7 +6,7 @@ Anderson Street,AS
 Annandale,AN
 Asbury Park,AP
 Atco,AO
-Atlantic City Rail Terminal,AC
+Atlantic City,AC
 Avenel,AV
 Basking Ridge,BI
 Bay Head,BH
@@ -20,35 +20,33 @@ Bound Brook,BK
 Bradley Beach,BB
 Brick Church,BU
 Bridgewater,BW
-Broadway-Fairlawn,BF
+Broadway,BF
 Campbell Hall,CB
 Chatham,CM
 Cherry Hill,CY
 Clifton,IF
-Convent Station,CN
+Convent,CN
 Cranford,XC
 Delawanna,DL
 Denville,DV
 Dover,DO
 Dunellen,DN
 East Orange,EO
-Edison,ED
-Egg Harbor City,EH
+Edison Station,ED
+Egg Harbor,EH
 Elberon,EL
 Elizabeth,EZ
 Emerson,EN
 Essex Street,EX
 Fanwood,FW
 Far Hills,FH
-Finderne,FE
 Garfield,GD
 Garwood,GW
 Gillette,GI
 Gladstone,GL
 Glen Ridge,GG
-Glen Rock,RS
+Glen Rock Main Line,RS
 Glen Rock Boro Hall,GK
-Great Notch,GA
 Hackettstown,HQ
 Hamilton,HL
 Hammonton,HN
@@ -60,7 +58,7 @@ Highland Avenue,HI
 Hillsdale,HD
 Hoboken,HB
 Hohokus,UF
-Jersey Avenue,JA
+Jersey Ave.,JA
 Kingsland,KG
 Lake Hopatcong,HP
 Lebanon,ON
@@ -76,13 +74,13 @@ Madison,MA
 Mahwah,MZ
 Manasquan,SQ
 Maplewood,MW
-Metro Park,MP
+Metropark,MP
 Metuchen,MU
-Middleton NJ,MI
+Middletown NJ,MI
 Middletown NY,MD
 Millburn,MB
 Millington,GO
-Montclair State U,UV
+MSU,UV
 Monmouth Park,MK
 Montclair Heights,HS
 Montvale,ZM
@@ -101,14 +99,14 @@ Netherwood,NE
 New Brunswick,NB
 New Providence,NV
 Newark Airport,NA
-Newark Broad Street,ND
+Newark Broad St,ND
 Newark Penn Station,NP
 North Branch,OR
 North Elizabeth,NZ
 New Bridge Landing,NH
 Oradell,OD
 Orange,OG
-Ottisville,OS
+Otisville,OS
 Park Ridge,PV
 Passaic,PS
 Paterson,RN
@@ -116,17 +114,17 @@ Peapack,PC
 Pearl River,PQ
 New york Penn Station,NY
 Perth Amboy,PE
-Philadelphia,PH
+30th St. Phl.,PH
 Plainfield,PF
 Plauderville,PL
-Point Pleasant Beach,PP
+Point Pleasant,PP
 Port Jervis,PO
 Princeton,PR
-Princeton Junction,PJ
-Radburn-Fairlawn,FZ
+Princeton Jct.,PJ
+Radburn,FZ
 Rahway,RH
 Ramsey,RY
-Ramsey Rt 17,17
+Ramsey Route 17,17
 Raritan,RA
 Red Bank,RB
 Ridgewood,RW
@@ -134,8 +132,8 @@ River Edge,RG
 Roselle Park,RL
 Rutherford,RF
 Salisbury Mills-Cornwall,CW
-Secaucus Upper Lvl,SE
-Secaucus Lower Lvl,TS
+Secaucus Upper Level,SE
+Secaucus Lower Level,TS
 Short Hills,RT
 Sloatsburg,XG
 Somerville,SM
@@ -156,7 +154,7 @@ Waldwick,WK
 Walnut Street,WA
 Watchung Avenue,WG
 Watsessing Avenue,WT
-Wayne-Route 23,23
+Wayne/Route 23,23
 Westfield,WF
 Westwood,WW
 White House,WH
