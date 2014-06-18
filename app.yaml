@@ -1,0 +1,13 @@
+application: njt-api
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /.*
+  script: api.application
+
+libraries:
+- name: lxml
+  version: "latest"

@@ -1,0 +1,6 @@
+*.pyc
+routes
+stops
+rawstops
+dv
+dates
