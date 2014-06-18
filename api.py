@@ -41,8 +41,8 @@ def get_status(train, station_page):
 	for row in t.getchildren()[1:]:
 		data = row.getchildren()[0].getchildren()[1].getchildren()[0].getchildren() #fuckin njt
 		if train.lstrip('0') == data[4].text_content().strip():
-			return data[5].text_content().strip()
-	return ''
+			return data[5].text_content().strip(), data[2].text_content().strip()
+	return '', ''
 
 def train_list(station_page):
 	h = lxml.html.document_fromstring(station_page)
@@ -90,7 +90,7 @@ def normalize_stop_name(s):
 	for i in replacements:
 		if i.title() in s:
 			s = s.replace(i.title(), i)
-	return s
+	return s.replace('station', "Station")
 
 class MainPage(Handler):
 	def get(self):
@@ -175,9 +175,9 @@ class Times(Handler):
 						resp['destination'] = normalize_stop_name(dest)
 						resp['failed'] = False
 						resp['url'] = station_url
-						status = get_status(dep_train, status_page) if status_page else ''
+						status, track = get_status(dep_train, status_page) if status_page else ('', '')
 						resp['routes'].append({'line': route['name'], 'departure_time': dep_time, 
-							'arrival_time': arr_time, 'train': dep_train, 'status': status.title()})
+							'arrival_time': arr_time, 'train': dep_train, 'status': status.title(), 'track': track})
 						train_count += 1
 					if not orig_real_times:
 						break
