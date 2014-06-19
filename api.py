@@ -1,5 +1,5 @@
 import webapp2
-from data import routes, stops, dates, departurevision
+from data import routes, stops, dates, departurevision, station_replacements
 import datetime
 import json
 import lxml.html
@@ -54,16 +54,9 @@ def train_list(station_page):
 	return l
 
 def find_stop(s):
-	replacements = {
-		"princeton junction": "PRINCETON JCT.",
-		"philadelphia": "30TH ST. PHL.",
-		"montclair state university": "MSU",
-		"montclair state": "MSU",
-		"jersey ave": "JERSEY AVE."
-	}
 	s = s.lower()
-	if s in replacements:
-		return replacements[s]
+	if s in station_replacements:
+		return station_replacements[s]
 	matches = []
 	for k in stops:
 		if s == k.lower():
@@ -185,7 +178,13 @@ class Times(Handler):
 		self.response.headers.add_header('Content-Type', 'application/json')
 		self.write(json.dumps(resp))
 
+class Stops(Handler):
+	def get(self):
+		self.response.headers.add_header('Content-Type', 'text/plain')
+		self.write('\r\n'.join(stops.keys() + station_replacements.keys()))
+
 application = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/times/([\w-]+)/([\w-]+)', Times),
+    ('/stops', Stops)
 ], debug=True)
