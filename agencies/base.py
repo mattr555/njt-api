@@ -1,5 +1,6 @@
 import os
 import json
+import datetime
 
 def parse_pattern(pattern):
     route = [{'stop_name': s.stop_name, 'stop_id': s.stop_id, 'times': {'0': {}, '1':{}}} for s in pattern]
@@ -15,12 +16,18 @@ def merge_patterns(p1, p2):
             l.insert(index, i)
     return l
 
+def daterange(start_date, end_date):
+    start_date = datetime.datetime.strptime(start_date, '%Y%m%d')
+    end_date = datetime.datetime.strptime(end_date, '%Y%m%d')
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + datetime.timedelta(n)
+
 class Base(object):
     def __init__(self):
         self.datadir = os.path.join('data', self.name)
         self.load()
         self.station_replacements = {}
-        self.normalize_replacements = []
+        self.normalize_replacements = ['th','nd','st']
         self.route_whitelist = []
 
     def parse(self):
@@ -73,11 +80,25 @@ class Base(object):
 
         dates = {}
         for sp in sched.GetServicePeriodList():
-            for (id, date, _) in sp.GetCalendarDatesFieldValuesTuples():
-                if dates.get(date):
-                    dates[date].append(id)
+            if sp.start_date:
+                for date in daterange(sp.start_date, sp.end_date):
+                    if sp.day_of_week[date.weekday()]:
+                        d = date.strftime('%Y%m%d')
+                        if dates.get(d):
+                            dates[d].append(sp.service_id)
+                        else:
+                            dates[d] = [sp.service_id]
+            for (id, date, extype) in sp.GetCalendarDatesFieldValuesTuples():
+                if extype == '1':
+                    if dates.get(date):
+                        dates[date].append(id)
+                    else:
+                        dates[date] = [id]
                 else:
-                    dates[date] = [id]
+                    if dates.get(date):
+                        dates[date].remove(id)
+                    else:
+                        dates[date] = []
 
         with open(os.path.join(self.datadir, 'dates'), 'w') as f:
             json.dump(dates, f)
@@ -104,7 +125,7 @@ class Base(object):
     def get_station_page(self, station):
         return '', ''
 
-    def get_status(self, train, station_page):
+    def get_status(self, trip, orig, dest, station_page):
         return '', ''
 
     def train_list(self, station_page):

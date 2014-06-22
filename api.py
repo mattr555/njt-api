@@ -4,9 +4,11 @@ import json
 
 from agencies.njt import NJT
 from agencies.wmata import WMATA
+from agencies.path import PATH
 
 njt = NJT()
 wmata = WMATA()
+path = PATH()
 
 def nth(year, month, n, weekday):
     for i in range(((n-1)*7+1), n*7+1):
@@ -173,4 +175,6 @@ application = webapp2.WSGIApplication([
     ('/njt/stops', Stops(njt)),
     ('/wmata/times/([\w-]+)/([\w-]+)', Times(wmata)),
     ('/wmata/stops', Stops(wmata)),
+    ('/path/times/([\w-]+)/([\w-]+)', Times(path)),
+    ('/path/stops', Stops(path)),
 ], debug=True)
