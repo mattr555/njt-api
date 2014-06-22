@@ -3,8 +3,10 @@ import datetime
 import json
 
 from agencies.njt import NJT
+from agencies.wmata import WMATA
 
 njt = NJT()
+wmata = WMATA()
 
 def nth(year, month, n, weekday):
 	for i in range(((n-1)*7+1), n*7+1):
@@ -131,9 +133,15 @@ def get_response(agency, orig, dest):
 					resp['destination'] = agency.normalize_stop_name(dest)
 					resp['failed'] = False
 					resp['url'] = station_url
-					status, track = agency.get_status(dep_train, status_page) if status_page else ('', '')
-					resp['routes'].append({'line': route['name'], 'departure_time': dep_time, 
-						'arrival_time': arr_time, 'train': dep_train, 'status': status.title(), 'track': track})
+					trip = {'line': route['name'], 'departure_time': dep_time, 
+							'arrival_time': arr_time, 'train': dep_train}
+					status, track = agency.get_status(trip, orig, dest, status_page) if status_page else ('', '')
+					if type(status) is str:
+						trip['status'] = status.title()
+					elif type(status) is list:
+						trip['status'] = status[train_count] if train_count < len(status) else ''
+					trip['track'] = track
+					resp['routes'].append(trip)
 					train_count += 1
 				if not orig_real_times:
 					break
@@ -162,5 +170,7 @@ def Stops(agency):
 application = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/njt/times/([\w-]+)/([\w-]+)', Times(njt)),
-    ('/njt/stops', Stops(njt))
+    ('/njt/stops', Stops(njt)),
+    ('/wmata/times/([\w-]+)/([\w-]+)', Times(wmata)),
+    ('/wmata/stops', Stops(wmata)),
 ], debug=True)

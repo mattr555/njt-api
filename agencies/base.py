@@ -19,35 +19,43 @@ class Base(object):
 	def __init__(self):
 		self.datadir = os.path.join('data', self.name)
 		self.load()
+		self.station_replacements = {}
+		self.normalize_replacements = []
+		self.route_whitelist = []
 
 	def parse(self):
 		import transitfeed
 
+		wl = bool(self.route_whitelist)
+
 		sched = transitfeed.Loader(os.path.join(self.datadir, 'gtfs.zip')).Load()
 		routes = {}
 		for route in sched.GetRouteList():
-			routes[route.route_id] = {'name': route.route_long_name, 'route': []}
+			if not wl or (wl and route.route_id in self.route_whitelist):
+				routes[route.route_id] = {'name': route.route_long_name, 'route': []}
 
 		for trip in sched.GetTripList():
-			pattern = list(trip.GetPattern())
-			if trip.direction_id == '1':
-				pattern.reverse()
-			pattern = parse_pattern(pattern)
-			if routes[trip.route_id]['route'] != pattern:
-				routes[trip.route_id]['route'] = merge_patterns(routes[trip.route_id]['route'], pattern)
+			if not wl or (wl and trip.route_id in self.route_whitelist):
+				pattern = list(trip.GetPattern())
+				if trip.direction_id == '1':
+					pattern.reverse()
+				pattern = parse_pattern(pattern)
+				if routes[trip.route_id]['route'] != pattern:
+					routes[trip.route_id]['route'] = merge_patterns(routes[trip.route_id]['route'], pattern)
 
 		for trip in sched.GetTripList():
-			times = trip.GetStopTimesTuples()
-			route = routes[trip.route_id]['route']
-			dir_id = str(trip.direction_id)
-			serv_id = str(trip.service_id)
-			for time in times:
-				stop_id = time[3]
-				for stop in route:
-					if not stop['times'][dir_id].get(trip.service_id):
-						stop['times'][dir_id][serv_id] = []
-					if stop['stop_id'] == stop_id:
-						stop['times'][dir_id][serv_id].append((time[1], time[0], trip.block_id))
+			if not wl or (wl and trip.route_id in self.route_whitelist):
+				times = trip.GetStopTimesTuples()
+				route = routes[trip.route_id]['route']
+				dir_id = str(trip.direction_id)
+				serv_id = str(trip.service_id)
+				for time in times:
+					stop_id = time[3]
+					for stop in route:
+						if not stop['times'][dir_id].get(trip.service_id):
+							stop['times'][dir_id][serv_id] = []
+						if stop['stop_id'] == stop_id:
+							stop['times'][dir_id][serv_id].append((time[1], time[0], self.get_train_identifier(trip)))
 
 		with open(os.path.join(self.datadir, 'routes'), 'w') as f:
 			json.dump(routes, f)
@@ -94,10 +102,13 @@ class Base(object):
 		return s.replace('station', "Station")
 
 	def get_station_page(self, station):
-		return ''
+		return '', ''
 
 	def get_status(self, train, station_page):
 		return '', ''
 
 	def train_list(self, station_page):
 		return []
+
+	def get_train_identifier(self, trip):
+		return trip.block_id
