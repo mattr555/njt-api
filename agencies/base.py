@@ -26,11 +26,19 @@ class Base(object):
     def __init__(self):
         self.datadir = os.path.join('data', self.name)
         self.load()
-        self.station_replacements = {}
-        self.normalize_replacements = ['th','nd','st']
-        self.route_whitelist = []
+        self.station_replacements = {} #map of commonly-used names for stations to their gtfs stop_names
+                                       #only if they're non-obvious ex: 'philadelphia': '30TH ST. PHL.'
+        self.normalize_replacements = ['rd ','nd ','st ','th '] #list of parts of names messed up by str.title()
+        self.route_whitelist = [] #populate if gtfs data has lines that you don't want 
+                                  #(ex: if it has bus data when you only want subway)
 
     def parse(self):
+        """parse the gtfs data into useable json format
+        a subclass should generally call this function with super(Agency, self).__init__()
+        if this isn't done, you'll have to parse the feed and populate your own dicts and schemas.
+
+        Any files needed to be generated to use realtime apis should be created here. It is suggested
+        that you call this parent method first, and then use the data generated to build your other files"""
         import transitfeed
 
         wl = bool(self.route_whitelist)
@@ -108,6 +116,8 @@ class Base(object):
         self.dates = dates
 
     def load(self):
+        """load the data from the files
+        any new files you generate should be loaded here into their own properties"""
         with open(os.path.join(self.datadir, 'routes')) as f:
             self.routes = json.load(f)
         with open(os.path.join(self.datadir, 'stops')) as f:
@@ -116,6 +126,10 @@ class Base(object):
             self.dates = json.load(f)
 
     def normalize_stop_name(self, s):
+        """this method takes a stop name (str) and returns a new stop name (str)
+        this should fix the errors caused when str.title() is called on a stop name
+        this method generally doesn't need to be overwritten, rather self.normalize_replacements
+        should be edited."""
         s = s.title()
         for i in self.normalize_replacements:
             if i.title() in s:
@@ -123,13 +137,26 @@ class Base(object):
         return s.replace('station', "Station")
 
     def get_station_page(self, station):
+        """this method takes a station name (str) and returns data from an api (any type)
+        and a url where a user can find more realtime data (str)
+        the data from the api will be passed to get_status() and train_list(), and will hopefully
+        be useful there."""
         return '', ''
 
     def get_status(self, trip, orig, dest, station_page):
+        """this method takes a trip dict, an origin (str), a destination (str), and the data
+        returned from the api called in get_station_page(). it will return the train's status (str) and
+        the track the train will depart from (str)"""
         return '', ''
 
     def train_list(self, station_page):
+        """this method takes the data returned from the realtime api called in get_station_page().
+        it will return a list of trains (strs) currently approaching or at the station. If there are late
+        trains, the list should include them."""
         return []
 
     def get_train_identifier(self, trip):
+        """this method takes a transitfeed.Trip object and returns the user-identifiable train id (str).
+        this number is generally found on timetables. if there is no such number in the system, it should
+        return an empty string."""
         return trip.block_id

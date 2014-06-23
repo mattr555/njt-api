@@ -1,0 +1,22 @@
+740c740
+<     'trip_headsign', 'direction_id', 'block_id', 'shape_id', 'trip_short_name'
+---
+>     'trip_headsign', 'direction_id', 'block_id', 'shape_id'
+757d756
+<     self.trip_short_name = None
+760c759
+<        self.direction_id, self.block_id, self.shape_id, self.trip_short_name) = field_list
+---
+>        self.direction_id, self.block_id, self.shape_id) = field_list
+2295c2294
+<         if seq < 0:
+---
+>         if seq < 1:
+2310c2309
+<       last_seq = -1 if points[0][0] == 0 else 0
+---
+>       last_seq = 0
+2439d2437
+<         """
+2444d2441
+<         """
