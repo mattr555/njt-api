@@ -6,17 +6,14 @@ import lxml.html
 
 class NJT(Base):
     name = 'njt'
-    
-    def __init__(self):
-        super(NJT, self).__init__()
-        self.station_replacements = {
-            "princeton junction": "PRINCETON JCT.",
-            "philadelphia": "30TH ST. PHL.",
-            "montclair state university": "MSU",
-            "montclair state": "MSU",
-            "jersey ave": "JERSEY AVE."
-        }
-        self.normalize_replacements = ["HBLR", "DvLR", "th", "st", "nd", "MSU"]
+    station_replacements = {
+        "princeton junction": "PRINCETON JCT.",
+        "philadelphia": "30TH ST. PHL.",
+        "montclair state university": "MSU",
+        "montclair state": "MSU",
+        "jersey ave": "JERSEY AVE."
+    }
+    normalize_replacements = ["HBLR", "DvLR", "th ", "st ", "nd ", "rd ", "MSU"]
 
     def parse(self, depvision=False):
         import csv

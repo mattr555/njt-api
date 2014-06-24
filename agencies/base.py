@@ -23,14 +23,16 @@ def daterange(start_date, end_date):
         yield start_date + datetime.timedelta(n)
 
 class Base(object):
+    name = '' #name of the folder where the data is found and name to use in url
+    station_replacements = {} #map of commonly-used names for stations to their gtfs stop_names
+                              #only if they're non-obvious ex: 'philadelphia': '30TH ST. PHL.'
+    normalize_replacements = ['rd ','nd ','st ','th '] #list of parts of names messed up by str.title()
+    route_whitelist = [] #populate if gtfs data has lines that you don't want 
+                         #(ex: if it has bus data when you only want subway)
+
     def __init__(self):
         self.datadir = os.path.join('data', self.__class__.name)
         self.load()
-        self.station_replacements = {} #map of commonly-used names for stations to their gtfs stop_names
-                                       #only if they're non-obvious ex: 'philadelphia': '30TH ST. PHL.'
-        self.normalize_replacements = ['rd ','nd ','st ','th '] #list of parts of names messed up by str.title()
-        self.route_whitelist = [] #populate if gtfs data has lines that you don't want 
-                                  #(ex: if it has bus data when you only want subway)
 
     def parse(self):
         """parse the gtfs data into useable json format
@@ -41,16 +43,16 @@ class Base(object):
         that you call this parent method first, and then use the data generated to build your other files"""
         import transitfeed
 
-        wl = bool(self.route_whitelist)
+        wl = bool(self.__class__.route_whitelist)
 
         sched = transitfeed.Loader(os.path.join(self.datadir, 'gtfs.zip')).Load()
         routes = {}
         for route in sched.GetRouteList():
-            if not wl or (wl and route.route_id in self.route_whitelist):
+            if not wl or (wl and route.route_id in self.__class__.route_whitelist):
                 routes[route.route_id] = {'name': route.route_long_name, 'route': []}
 
         for trip in sched.GetTripList():
-            if not wl or (wl and trip.route_id in self.route_whitelist):
+            if not wl or (wl and trip.route_id in self.__class__.route_whitelist):
                 pattern = list(trip.GetPattern())
                 if trip.direction_id == '1':
                     pattern.reverse()
@@ -59,7 +61,7 @@ class Base(object):
                     routes[trip.route_id]['route'] = merge_patterns(routes[trip.route_id]['route'], pattern)
 
         for trip in sched.GetTripList():
-            if not wl or (wl and trip.route_id in self.route_whitelist):
+            if not wl or (wl and trip.route_id in self.__class__.route_whitelist):
                 times = trip.GetStopTimesTuples()
                 route = routes[trip.route_id]['route']
                 dir_id = str(trip.direction_id)
@@ -128,10 +130,10 @@ class Base(object):
     def normalize_stop_name(self, s):
         """this method takes a stop name (str) and returns a new stop name (str)
         this should fix the errors caused when str.title() is called on a stop name
-        this method generally doesn't need to be overwritten, rather self.normalize_replacements
+        this method generally doesn't need to be overwritten, rather class attrib. normalize_replacements
         should be edited."""
         s = s.title()
-        for i in self.normalize_replacements:
+        for i in self.__class__.normalize_replacements:
             if i.title() in s:
                 s = s.replace(i.title(), i)
         return s.replace('station', "Station")

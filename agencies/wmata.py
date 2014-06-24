@@ -6,17 +6,14 @@ import os
 
 class WMATA(Base):
     name = 'wmata'
-    
-    def __init__(self):
-        super(WMATA, self).__init__()
-        self.route_whitelist = ["BLUE", "RED", "ORANGE", "GREEN", "YELLOW"]
-        self.line_shortcodes = {
-            "Metrorail Green Line": "GR",
-            "Metrorail Blue Line": "BL",
-            "Metrorail Orange Line": "OR",
-            "Metrorail Red Line": "RD",
-            "Metrorail Yellow Line": "YL"
-        }
+    route_whitelist = ["BLUE", "RED", "ORANGE", "GREEN", "YELLOW"]
+    line_shortcodes = {
+        "Metrorail Green Line": "GR",
+        "Metrorail Blue Line": "BL",
+        "Metrorail Orange Line": "OR",
+        "Metrorail Red Line": "RD",
+        "Metrorail Yellow Line": "YL"
+    }
 
     def parse(self, api=False):
         super(WMATA, self).parse()
