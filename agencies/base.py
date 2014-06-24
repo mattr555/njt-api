@@ -24,7 +24,7 @@ def daterange(start_date, end_date):
 
 class Base(object):
     def __init__(self):
-        self.datadir = os.path.join('data', self.name)
+        self.datadir = os.path.join('data', self.__class__.name)
         self.load()
         self.station_replacements = {} #map of commonly-used names for stations to their gtfs stop_names
                                        #only if they're non-obvious ex: 'philadelphia': '30TH ST. PHL.'

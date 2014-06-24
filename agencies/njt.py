@@ -5,8 +5,9 @@ import urllib2
 import lxml.html
 
 class NJT(Base):
+    name = 'njt'
+    
     def __init__(self):
-        self.name = 'njt'
         super(NJT, self).__init__()
         self.station_replacements = {
             "princeton junction": "PRINCETON JCT.",

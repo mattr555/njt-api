@@ -5,8 +5,9 @@ import urllib2
 import os
 
 class WMATA(Base):
+    name = 'wmata'
+    
     def __init__(self):
-        self.name = 'wmata'
         super(WMATA, self).__init__()
         self.route_whitelist = ["BLUE", "RED", "ORANGE", "GREEN", "YELLOW"]
         self.line_shortcodes = {

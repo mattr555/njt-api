@@ -1,16 +1,17 @@
 import webapp2
 import datetime
 import json
+import importlib
+import os
+import logging
+from agencies.base import Base
 
-from agencies.njt import NJT
-from agencies.wmata import WMATA
-from agencies.path import PATH
-from agencies.lirr import LIRR
-
-njt = NJT()
-wmata = WMATA()
-path = PATH()
-lirr = LIRR()
+for file in os.listdir('agencies'):
+    name, ext = os.path.splitext(file)
+    if name in ['base', '__init__']:
+        continue
+    if ext == os.extsep + 'py':
+        importlib.import_module('agencies.' + name)
 
 def nth(year, month, n, weekday):
     for i in range(((n-1)*7+1), n*7+1):
@@ -171,14 +172,17 @@ def Stops(agency):
             self.write('\r\n'.join(agency.stops.keys() + agency.station_replacements.keys()))
     return TheHandler
 
-application = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/njt/times/([\w-]+)/([\w-]+)', Times(njt)),
-    ('/njt/stops', Stops(njt)),
-    ('/wmata/times/([\w-]+)/([\w-]+)', Times(wmata)),
-    ('/wmata/stops', Stops(wmata)),
-    ('/path/times/([\w-]+)/([\w-]+)', Times(path)),
-    ('/path/stops', Stops(path)),
-    ('/lirr/times/([\w-]+)/([\w-]+)', Times(lirr)),
-    ('/lirr/stops', Stops(lirr)),
-], debug=True)
+handlers = []
+for i in Base.__subclasses__():
+    instance = i()
+    url = '/{}/times/([\w-]+)/([\w-]+)'.format(i.name)
+    handler = Times(instance)
+    handlers.append((url, handler))
+    url = '/{}/stops'.format(i.name)
+    handler = Stops(instance)
+    handlers.append((url, handler))
+    logging.info('loaded ' + i.name)
+
+application = webapp2.WSGIApplication(
+    [('/', MainPage)] + handlers, 
+    debug=True)
