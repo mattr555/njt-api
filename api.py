@@ -1,17 +1,9 @@
 import webapp2
 import datetime
 import json
-import importlib
-import os
 import logging
 from agencies.base import Base
-
-for file in os.listdir('agencies'):
-    name, ext = os.path.splitext(file)
-    if name in ['base', '__init__']:
-        continue
-    if ext == os.extsep + 'py':
-        importlib.import_module('agencies.' + name)
+from util import iter_agencies
 
 def nth(year, month, n, weekday):
     for i in range(((n-1)*7+1), n*7+1):
@@ -173,15 +165,15 @@ def Stops(agency):
     return TheHandler
 
 handlers = []
-for i in Base.__subclasses__():
-    instance = i()
-    url = '/{}/times/([\w-]+)/([\w-]+)'.format(i.name)
+for agency in iter_agencies():
+    instance = agency()
+    url = '/{}/times/([\w-]+)/([\w-]+)'.format(agency.name)
     handler = Times(instance)
     handlers.append((url, handler))
-    url = '/{}/stops'.format(i.name)
+    url = '/{}/stops'.format(agency.name)
     handler = Stops(instance)
     handlers.append((url, handler))
-    logging.info('loaded ' + i.name)
+    logging.info('loaded ' + agency.name)
 
 application = webapp2.WSGIApplication(
     [('/', MainPage)] + handlers, 

@@ -34,7 +34,7 @@ class Base(object):
         self.datadir = os.path.join('data', self.__class__.name)
         self.load()
 
-    def parse(self):
+    def parse(self, api=False):
         """parse the gtfs data into useable json format
         a subclass should generally call this function with super(Agency, self).__init__()
         if this isn't done, you'll have to parse the feed and populate your own dicts and schemas.
