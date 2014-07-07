@@ -1,4 +1,4 @@
-import webapp2
+import bottle
 import datetime
 import json
 import logging
@@ -22,10 +22,6 @@ class EDT(datetime.tzinfo):
         return datetime.timedelta(hours=-5) + self.dst(dt)
     def tzname(self, dt):
         return "America/New York"
-
-class Handler(webapp2.RequestHandler):
-    def write(self, *a, **kw):
-        self.response.write(*a, **kw)
 
 def find_stop(s, stops, station_replacements):
     s = s.lower()
@@ -52,7 +48,7 @@ def infer_stop(known, unknown, stops):
     return None, None
 
 
-def get_response(agency, orig, dest):
+def get_times_response(agency, orig, dest):
     # step 1: figure out which stop they meant
     orig = orig.replace('-', ' ')
     dest = dest.replace('-', ' ')
@@ -145,36 +141,26 @@ def get_response(agency, orig, dest):
 
     return resp
 
-class MainPage(Handler):
-    def get(self):
-        self.write('This api is meant for DDG, but you can use it too...\r\nendpoint is /times/:from/:to, delimit spaces with -')
+@bottle.route('/')
+def index():
+    return 'This api is meant for DDG, but you can use it too...<br/>endpoint is /times/:from/:to, delimit spaces with -'
 
-def Times(agency):
-    class TheHandler(Handler):
-        def get(self, orig, dest):
-            resp = get_response(agency, orig, dest)
-            self.response.headers.add_header('Content-Type', 'application/json')
-            self.write(json.dumps(resp))
-    return TheHandler
+def create_times_handler(agency):
+    @bottle.route('/{}/times/:orig/:dest'.format(agency.name))
+    def handler(orig, dest):
+        return get_times_response(agency, orig, dest)
+    return handler
 
-def Stops(agency):
-    class TheHandler(Handler):
-        def get(self):
-            self.response.headers.add_header('Content-Type', 'text/plain')
-            self.write('\r\n'.join(agency.stops.keys() + agency.station_replacements.keys()))
-    return TheHandler
+def create_stops_handler(agency):
+    @bottle.route('/{}/times/:orig/:dest'.format(agency.name))
+    def handler(orig, dest):
+        return '\r\n'.join(agency.stops.keys() + agency.station_replacements.keys())
+    return handler
 
-handlers = []
 for agency in iter_agencies():
     instance = agency()
-    url = '/{}/times/([\w-]+)/([\w-]+)'.format(agency.name)
-    handler = Times(instance)
-    handlers.append((url, handler))
-    url = '/{}/stops'.format(agency.name)
-    handler = Stops(instance)
-    handlers.append((url, handler))
-    logging.info('loaded ' + agency.name)
+    create_stops_handler(instance)
+    create_times_handler(instance)
 
-application = webapp2.WSGIApplication(
-    [('/', MainPage)] + handlers, 
-    debug=True)
+bottle.run(server='gae')
+application = bottle.app()
