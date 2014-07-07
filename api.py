@@ -143,24 +143,37 @@ def get_times_response(agency, orig, dest):
 
 @bottle.route('/')
 def index():
-    return 'This api is meant for DDG, but you can use it too...<br/>endpoint is /times/:from/:to, delimit spaces with -'
+    return '''This api is meant for DDG, but you can use it too...<br/>
+        endpoint is /times/:from/:to, delimit spaces with -'''
 
-def create_times_handler(agency):
-    @bottle.route('/{}/times/:orig/:dest'.format(agency.name))
-    def handler(orig, dest):
-        return get_times_response(agency, orig, dest)
-    return handler
-
-def create_stops_handler(agency):
-    @bottle.route('/{}/times/:orig/:dest'.format(agency.name))
-    def handler(orig, dest):
-        return '\r\n'.join(agency.stops.keys() + agency.station_replacements.keys())
-    return handler
-
+#load our agencies but don't instantiate them (to save resources)
+agencies = {}
 for agency in iter_agencies():
-    instance = agency()
-    create_stops_handler(instance)
-    create_times_handler(instance)
+    agencies[agency.name] = agency
+
+#instantiate an agency if it exists
+def get_agency(name):
+    agency = agencies.get(name)
+    if agency:
+        if type(agency) is type:
+            agency = agency()
+            agencies[agency.name] = agency
+        return agency
+    return None
+
+@bottle.route('/:agency/times/:orig/:dest')
+def times_handler(agency, orig, dest):
+    agency = get_agency(agency)
+    if agency:
+        return get_times_response(agency, orig, dest)
+    raise bottle.HTTPError(404)
+
+@bottle.route('/:agency/stops')
+def stops_handler(agency):
+    agency = get_agency(agency)
+    if agency:
+        return '\r\n'.join(agency.stops.keys() + agency.station_replacements.keys())
+    raise bottle.HTTPError(404)
 
 bottle.run(server='gae')
 application = bottle.app()
