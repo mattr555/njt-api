@@ -32,7 +32,10 @@ class Base(object):
 
     def __init__(self):
         self.datadir = os.path.join('data', self.__class__.name)
-        self.load()
+        try:
+            self.load()
+        except:
+            self.routes = {}
 
     def parse(self, api=False):
         """parse the gtfs data into useable json format
@@ -120,17 +123,12 @@ class Base(object):
     def load(self):
         """load the data from the files
         any new files you generate should be loaded here into their own properties"""
-        try:
-            with open(os.path.join(self.datadir, 'routes')) as f:
-                self.routes = json.load(f)
-            with open(os.path.join(self.datadir, 'stops')) as f:
-                self.stops = json.load(f)
-            with open(os.path.join(self.datadir, 'dates')) as f:
-                self.dates = json.load(f)
-        except:
-            self.routes = {}
-            self.stops = {}
-            self.dates = {}
+        with open(os.path.join(self.datadir, 'routes')) as f:
+            self.routes = json.load(f)
+        with open(os.path.join(self.datadir, 'stops')) as f:
+            self.stops = json.load(f)
+        with open(os.path.join(self.datadir, 'dates')) as f:
+            self.dates = json.load(f)
 
     def normalize_stop_name(self, s):
         """this method takes a stop name (str) and returns a new stop name (str)

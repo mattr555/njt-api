@@ -1,18 +1,27 @@
 njt-api
 =======
 
-New Jersey Transit api
+API for finding trains between two connected stops in an agency. (Called "njt-api" from its initial use for New Jersey Transit)
 
-This is an api currently set up to run on Google App Engine, though one could easily reconfigure it for a lightweight framework like flask. It's use is mostly for duckduckgo's instant answer platform. You can find it at [duckduckgo/zeroclickinfo-spice#891](https://github.com/duckduckgo/zeroclickinfo-spice/pull/891)
+This is an api created with bottle, with the necessary files to run on Google App Engine. It's use is mostly for duckduckgo's instant answer platform. You can find it at [duckduckgo/zeroclickinfo-spice#891](https://github.com/duckduckgo/zeroclickinfo-spice/pull/891)
 
-TODO: make it work with other GTFS feeds (namely NYC MTA)
-
-Usage:
+Usage
+=====
 
 0. `git clone`
-1. Download the GTFS data from [NJT's site](https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo).
-2. Put the zip file in the repo root.
-3. `(sudo) pip install transitfeed` and grab [the GAE stuff](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python).
+1. Download the GTFS data for each agency you want to use.
+2. Put the zip files in `data/<name>/gtfs.zip`.
+3. `(sudo) pip install transitfeed bottle` and grab [the GAE stuff](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python).
 4. `python parse.py`
+5. To use on GAE, you'll need to symlink bottle.py to the repo root.
 
 That's it. You can now kick off the GAE instance.
+
+Data Sources
+============
+
++ [Long Island Railroad (lirr)](http://web.mta.info/developers/developer-data-terms.html)
++ [Metro-North (mnr)](http://web.mta.info/developers/developer-data-terms.html)
++ [New Jersey Transit (njt)](https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo) - requires account
++ [Port Authority Trans-Hudson (path)](http://www.panynj.gov/path/developers.html)
++ [Washington, D.C. Metro (wmata)](http://www.wmata.com/rider_tools/license_agreement.cfm)

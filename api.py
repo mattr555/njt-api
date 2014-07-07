@@ -144,7 +144,7 @@ def get_times_response(agency, orig, dest):
 @bottle.route('/')
 def index():
     return '''This api is meant for DDG, but you can use it too...<br/>
-        endpoint is /times/:from/:to, delimit spaces with -'''
+        endpoint is /:agency/times/:orig/:dest, delimit spaces with -'''
 
 #load our agencies but don't instantiate them (to save resources)
 agencies = {}
@@ -158,7 +158,8 @@ def get_agency(name):
         if type(agency) is type:
             agency = agency()
             agencies[agency.name] = agency
-        return agency
+        if agency.routes:
+            return agency
     return None
 
 @bottle.route('/:agency/times/:orig/:dest')
