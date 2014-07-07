@@ -120,12 +120,17 @@ class Base(object):
     def load(self):
         """load the data from the files
         any new files you generate should be loaded here into their own properties"""
-        with open(os.path.join(self.datadir, 'routes')) as f:
-            self.routes = json.load(f)
-        with open(os.path.join(self.datadir, 'stops')) as f:
-            self.stops = json.load(f)
-        with open(os.path.join(self.datadir, 'dates')) as f:
-            self.dates = json.load(f)
+        try:
+            with open(os.path.join(self.datadir, 'routes')) as f:
+                self.routes = json.load(f)
+            with open(os.path.join(self.datadir, 'stops')) as f:
+                self.stops = json.load(f)
+            with open(os.path.join(self.datadir, 'dates')) as f:
+                self.dates = json.load(f)
+        except:
+            self.routes = {}
+            self.stops = {}
+            self.dates = {}
 
     def normalize_stop_name(self, s):
         """this method takes a stop name (str) and returns a new stop name (str)
