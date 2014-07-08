@@ -11,9 +11,9 @@ Usage
 0. `git clone`
 1. Download the GTFS data for each agency you want to use.
 2. Put the zip files in `data/<name>/gtfs.zip`.
-3. `(sudo) pip install transitfeed bottle` and grab [the GAE stuff](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python).
-4. `python parse.py`
-5. To use on GAE, you'll need to symlink bottle.py to the repo root.
+3. `pip install --target lib transitfeed bottle` and grab [the GAE stuff](https://developers.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python).
+4. You'll need to patch `transitfeed.py`. On linux, this command is `patch lib/transitfeed.py < transitfeed.py.patch`. I would report these errors, but this library hasn't been updated in two years.
+5. `python parse.py`
 
 That's it. You can now kick off the GAE instance.
 

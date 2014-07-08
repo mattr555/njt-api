@@ -1,22 +1,68 @@
-740c740
-<     'trip_headsign', 'direction_id', 'block_id', 'shape_id', 'trip_short_name'
----
->     'trip_headsign', 'direction_id', 'block_id', 'shape_id'
-757d756
-<     self.trip_short_name = None
-760c759
-<        self.direction_id, self.block_id, self.shape_id, self.trip_short_name) = field_list
----
->        self.direction_id, self.block_id, self.shape_id) = field_list
-2295c2294
-<         if seq < 0:
----
->         if seq < 1:
-2310c2309
-<       last_seq = -1 if points[0][0] == 0 else 0
----
->       last_seq = 0
-2439d2437
-<         """
-2444d2441
-<         """
+--- /usr/local/lib/python2.7/dist-packages/transitfeed.py	2014-06-23 18:15:16.000000000 -0400
++++ /home/matt/.local/lib/python2.7/site-packages/transitfeed.py	2014-07-07 13:35:30.533357137 -0400
+@@ -737,7 +737,7 @@
+ class Trip(object):
+   _REQUIRED_FIELD_NAMES = ['route_id', 'service_id', 'trip_id']
+   _FIELD_NAMES = _REQUIRED_FIELD_NAMES + [
+-    'trip_headsign', 'direction_id', 'block_id', 'shape_id'
++    'trip_headsign', 'direction_id', 'block_id', 'shape_id', 'trip_short_name'
+     ]
+   _FIELD_NAMES_HEADWAY = ['trip_id', 'start_time', 'end_time', 'headway_secs']
+ 
+@@ -754,9 +754,10 @@
+     self.service_period = service_period
+     self.direction_id = None
+     self.block_id = None
++    self.trip_short_name = None
+     if field_list:
+       (self.route_id, self.service_id, self.trip_id, self.trip_headsign,
+-       self.direction_id, self.block_id, self.shape_id) = field_list
++       self.direction_id, self.block_id, self.shape_id, self.trip_short_name) = field_list
+ 
+   def GetFieldValuesTuple(self):
+     return [getattr(self, fn) or '' for fn in Trip._FIELD_NAMES]
+@@ -1485,11 +1486,13 @@
+         elif (value != u'0') and (value != '1'):
+           problems.InvalidValue(field_name, value)
+         index += 1
++    """
+     if (True not in self.day_of_week and
+         1 not in self.date_exceptions.values()):
+       problems.OtherProblem('Service period with service_id "%s" '
+                             'doesn\'t have service on any days '
+                             'of the week.' % self.service_id)
++    """
+     for date in self.date_exceptions:
+       if not self._IsValidDate(date):
+         problems.InvalidValue('date', date)
+@@ -2291,7 +2294,7 @@
+         continue
+       try:
+         seq = int(seq)
+-        if seq < 1:
++        if seq < 0:
+           self._problems.InvalidValue('shape_pt_sequence', seq,
+                                       'Value should be a number (1 or higher)')
+       except (TypeError, ValueError):
+@@ -2306,7 +2309,7 @@
+     for shape_id, points in shapes.items():
+       shape = Shape(shape_id)
+       points.sort()
+-      last_seq = 0
++      last_seq = -1 if points[0][0] == 0 else 0
+       for (seq, lat, lon, dist) in points:
+         if (seq == last_seq):
+           self._problems.InvalidValue('shape_pt_sequence', seq,
+@@ -2435,10 +2438,12 @@
+           (trip_id, sequence[-1][0]))
+       expected_sequence = 1
+       for stop_sequence, stoptime in sequence:
++	"""
+         if expected_sequence != stop_sequence:
+           self._problems.OtherProblem(
+             'Bad stop_sequence. Expected %i, found %i in trip_id "%s"' %
+             (expected_sequence, stop_sequence, trip_id))
++	"""
+         trip.AddStopTimeObject(stoptime, problems=self._problems)
+         expected_sequence = stop_sequence + 1
+ 

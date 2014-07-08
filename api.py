@@ -1,7 +1,8 @@
-import bottle
 import datetime
 import json
 import logging
+import sys
+import os
 from agencies.base import Base
 from util import iter_agencies
 
@@ -140,6 +141,9 @@ def get_times_response(agency, orig, dest):
                     break
 
     return resp
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
+import bottle
 
 @bottle.route('/')
 def index():

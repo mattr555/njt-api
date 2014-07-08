@@ -1,8 +1,11 @@
 from util import iter_agencies, avail_agencies
 import sys
+import os
 import argparse
 import importlib
 from agencies.base import Base
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('agencies', type=str, nargs='*', default=[], help="list of agencies to parse (default all)")
