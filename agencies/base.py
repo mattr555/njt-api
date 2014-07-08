@@ -29,6 +29,8 @@ class Base(object):
     normalize_replacements = ['rd ','nd ','st ','th '] #list of parts of names messed up by str.title()
     route_whitelist = [] #populate if gtfs data has lines that you don't want 
                          #(ex: if it has bus data when you only want subway)
+    tzoffset = -5        #timezone offset from UTC (these settings are default for EST)
+    dst_observed = True  #is dst observed here?
 
     def __init__(self):
         self.datadir = os.path.join('data', self.__class__.name)

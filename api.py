@@ -4,25 +4,7 @@ import logging
 import sys
 import os
 from agencies.base import Base
-from util import iter_agencies
-
-def nth(year, month, n, weekday):
-    for i in range(((n-1)*7+1), n*7+1):
-        date = datetime.datetime(year, month, i, hour=2)
-        if date.weekday() == weekday:
-            return date
-
-class EDT(datetime.tzinfo):
-    def dst(self, dt):
-        dston = nth(dt.year, 3, 2, 6)
-        dstoff = nth(dt.year, 11, 1, 6)
-        if dston <= dt.replace(tzinfo=None) < dstoff:
-            return datetime.timedelta(hours=1)
-        return datetime.timedelta(0)
-    def utcoffset(self, dt):
-        return datetime.timedelta(hours=-5) + self.dst(dt)
-    def tzname(self, dt):
-        return "America/New York"
+from util import iter_agencies, AmericanTimezone
 
 def find_stop(s, stops, station_replacements):
     s = s.lower()
@@ -53,7 +35,7 @@ def get_times_response(agency, orig, dest):
     # step 1: figure out which stop they meant
     orig = orig.replace('-', ' ')
     dest = dest.replace('-', ' ')
-    nowt = datetime.datetime.now(EDT())
+    nowt = datetime.datetime.now(AmericanTimezone(agency.tzoffset, agency.dst_observed))
     now = nowt.strftime('%H:%M:%S')
     if nowt.hour < 4:
         nowt -= datetime.timedelta(days=1)
