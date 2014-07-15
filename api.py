@@ -41,7 +41,7 @@ def get_times_response(agency, orig, dest):
         nowt -= datetime.timedelta(days=1)
     today = nowt.strftime('%Y%m%d')
     route_matches, trains = [], []
-    resp = {'failed': True, 'routes': []}
+    resp = {'failed': True, 'routes': [], 'now': now}
         
     orig_eq = find_stop(orig, agency.stops, agency.station_replacements)
     dest_eq = find_stop(dest, agency.stops, agency.station_replacements)

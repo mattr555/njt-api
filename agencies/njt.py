@@ -11,7 +11,9 @@ class NJT(Base):
         "philadelphia": "30TH ST. PHL.",
         "montclair state university": "MSU",
         "montclair state": "MSU",
-        "jersey ave": "JERSEY AVE."
+        "jersey ave": "JERSEY AVE.",
+        "ny penn": "NEW YORK PENN STATION",
+        "new york pennsylvania station": "NEW YORK PENN STATION"
     }
     normalize_replacements = ["HBLR", "DvLR", "th ", "st ", "nd ", "rd ", "MSU"]
 

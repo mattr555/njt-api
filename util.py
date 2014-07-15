@@ -1,6 +1,7 @@
 import os
 import importlib
 import datetime
+import logging
 from agencies.base import Base
 
 def avail_agencies():
@@ -15,7 +16,10 @@ def avail_agencies():
 
 def import_agencies():
     for name in avail_agencies():
-        importlib.import_module('agencies.' + name)
+        try:
+            importlib.import_module('agencies.' + name)
+        except ImportError:
+            logging.error('ImportError on ' + name + ', skipping')
 
 def iter_agencies():
     import_agencies()
