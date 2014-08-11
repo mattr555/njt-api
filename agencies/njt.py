@@ -13,6 +13,7 @@ class NJT(Base):
         "montclair state": "MSU",
         "jersey ave": "JERSEY AVE.",
         "ny penn": "NEW YORK PENN STATION",
+        "new york pennsylvania": "NEW YORK PENN STATION",
         "new york pennsylvania station": "NEW YORK PENN STATION"
     }
     normalize_replacements = ["HBLR", "DvLR", "th ", "st ", "nd ", "rd ", "MSU"]
@@ -65,7 +66,7 @@ class NJT(Base):
         h = lxml.html.document_fromstring(station_page)
         t = h.get_element_by_id('GridView1')
         for row in t.getchildren()[1:]:
-            data = row.getchildren()[0].getchildren()[1].getchildren()[0].getchildren() #fuckin njt
+            data = row.getchildren()[0].getchildren()[1].getchildren()[0].getchildren()
             yield data
 
     def get_status(self, trip, orig, dest, station_page):

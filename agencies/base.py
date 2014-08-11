@@ -3,7 +3,7 @@ import json
 import datetime
 
 def parse_pattern(pattern):
-    route = [{'stop_name': s.stop_name, 'stop_id': s.stop_id, 'times': {'0': {}, '1':{}}} for s in pattern]
+    route = [{'stop_name': s.stop_name, 'stop_id': s.stop_id, 'times': {'0': {}, '1': {}}} for s in pattern]
     return route
 
 def merge_patterns(p1, p2):
@@ -23,14 +23,15 @@ def daterange(start_date, end_date):
         yield start_date + datetime.timedelta(n)
 
 class Base(object):
-    name = '' #name of the folder where the data is found and name to use in url
-    station_replacements = {} #map of commonly-used names for stations to their gtfs stop_names
-                              #only if they're non-obvious ex: 'philadelphia': '30TH ST. PHL.'
-    normalize_replacements = ['rd ','nd ','st ','th '] #list of parts of names messed up by str.title()
-    route_whitelist = [] #populate if gtfs data has lines that you don't want 
-                         #(ex: if it has bus data when you only want subway)
-    tzoffset = -5        #timezone offset from UTC (these settings are default for EST)
-    dst_observed = True  #is dst observed here?
+    name = ''             # name of the folder where the data is found and name to use in url
+    station_replacements = {}  # map of commonly-used names for stations to their gtfs stop_names
+                               # only if they're non-obvious ex: 'philadelphia': '30TH ST. PHL.'
+    normalize_replacements = ['rd ', 'nd ', 'st ', 'th ']  # list of parts of names messed up by str.title()
+    route_whitelist = []  # populate if gtfs data has lines that you don't want
+                          # (ex: if it has bus data when you only want subway)
+    tzoffset = -5         # timezone offset from UTC (these settings are default for EST)
+    dst_observed = True   # is dst observed here?
+    timeswitch = 4        # hour when to roll over to the next day
 
     def __init__(self):
         self.datadir = os.path.join('data', self.__class__.name)
@@ -77,6 +78,7 @@ class Base(object):
                         if not stop['times'][dir_id].get(trip.service_id):
                             stop['times'][dir_id][serv_id] = []
                         if stop['stop_id'] == stop_id:
+                            # arrival time, trip id, train id
                             stop['times'][dir_id][serv_id].append((time[1], time[0], self.get_train_identifier(trip)))
 
         with open(os.path.join(self.datadir, 'routes'), 'w') as f:

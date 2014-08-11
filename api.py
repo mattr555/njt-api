@@ -1,10 +1,7 @@
 import datetime
-import json
-import logging
 import sys
 import os
-from agencies.base import Base
-from util import iter_agencies, AmericanTimezone
+from util import iter_agencies, AmericanTimezone, norm_hour
 
 def find_stop(s, stops, station_replacements):
     s = s.lower()
@@ -37,12 +34,12 @@ def get_times_response(agency, orig, dest):
     dest = dest.replace('-', ' ')
     nowt = datetime.datetime.now(AmericanTimezone(agency.tzoffset, agency.dst_observed))
     now = nowt.strftime('%H:%M:%S')
-    if nowt.hour < 4:
+    if nowt.hour < agency.timeswitch:
         nowt -= datetime.timedelta(days=1)
     today = nowt.strftime('%Y%m%d')
     route_matches, trains = [], []
     resp = {'failed': True, 'routes': [], 'now': now}
-        
+
     orig_eq = find_stop(orig, agency.stops, agency.station_replacements)
     dest_eq = find_stop(dest, agency.stops, agency.station_replacements)
 
@@ -95,21 +92,22 @@ def get_times_response(agency, orig, dest):
                 dep_time, dep_trip, arr_time, dep_train = (None,)*4
                 for i in range(len(orig_real_times)):
                     time, trip, train = orig_real_times.pop(0)
-                    if now < time or train in status_page_trains: #see if the train is delayed
+                    time = norm_hour(time)
+                    if now < time or train in status_page_trains:  # see if the train is delayed
                         dep_time = time
                         dep_trip = trip
                         dep_train = train
                         trains.append(train)
                         break
                 for i, j, _ in dest_real_times:
-                    if j == dep_trip: #make sure the train actually stops on this trip
+                    if j == dep_trip:  # make sure the train actually stops on this trip
                         arr_time = i
                 if arr_time:
                     resp['origin'] = agency.normalize_stop_name(orig)
                     resp['destination'] = agency.normalize_stop_name(dest)
                     resp['failed'] = False
                     resp['url'] = station_url
-                    trip = {'line': route['name'], 'departure_time': dep_time, 
+                    trip = {'line': route['name'], 'departure_time': dep_time,
                             'arrival_time': arr_time, 'train': dep_train}
                     status, track = agency.get_status(trip, orig, dest, status_page) if status_page else ('', '')
                     if type(status) is str:

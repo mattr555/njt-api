@@ -36,6 +36,7 @@ class AmericanTimezone(datetime.tzinfo):
     def __init__(self, offset, dst_observed):
         self.offset = offset
         self.dst_observed = dst_observed
+
     def dst(self, dt):
         if self.dst_observed:
             dston = nth(dt.year, 3, 2, 6)
@@ -43,7 +44,15 @@ class AmericanTimezone(datetime.tzinfo):
             if dston <= dt.replace(tzinfo=None) < dstoff:
                 return datetime.timedelta(hours=1)
         return datetime.timedelta(0)
+
     def utcoffset(self, dt):
         return datetime.timedelta(hours=self.offset) + self.dst(dt)
+
     def tzname(self, dt):
         return str(self.offset * 100)
+
+def norm_hour(t):
+    hour = t.split(':')[0]
+    if int(hour) > 23:
+        hour = str(int(hour) - 24)
+    return hour + ':' + ''.join(t.split(':')[1:])
