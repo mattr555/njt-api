@@ -17,6 +17,8 @@ class NJT(Base):
         "new york pennsylvania station": "NEW YORK PENN STATION"
     }
     normalize_replacements = ["HBLR", "DvLR", "th ", "st ", "nd ", "rd ", "MSU"]
+    timeswitch = 3
+    route_whitelist = ['11', '10', '13', '15', '14', '17', '1', '3', '2', '5', '7', '6', '9', '8']  # no lightrail stuff
 
     def parse(self, depvision=False):
         import csv

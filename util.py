@@ -55,4 +55,4 @@ def norm_hour(t):
     hour = t.split(':')[0]
     if int(hour) > 23:
         hour = str(int(hour) - 24)
-    return hour + ':' + ''.join(t.split(':')[1:])
+    return hour + ':' + ':'.join(t.split(':')[1:])

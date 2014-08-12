@@ -1,20 +1,51 @@
+from __future__ import division
 import os
 import json
 import datetime
 
-def parse_pattern(pattern):
-    route = [{'stop_name': s.stop_name, 'stop_id': s.stop_id, 'times': {'0': {}, '1': {}}} for s in pattern]
-    return route
+def toposort2(data):
+    """Dependencies are expressed as a dictionary whose keys are items
+and whose values are a set of dependent items. Output is a list of
+sets in topological order. The first set consists of items with no
+dependences, each subsequent set consists of items that depend upon
+items in the preceeding sets.
 
-def merge_patterns(p1, p2):
-    l = list(p2)
-    index = 0
-    for i in p1:
-        if i in l:
-            index = l.index(i)
-        else:
-            l.insert(index, i)
-    return l
+>>> print '\\n'.join(repr(sorted(x)) for x in toposort2({
+...     2: set([11]),
+...     9: set([11,8]),
+...     10: set([11,3]),
+...     11: set([7,5]),
+...     8: set([7,3]),
+...     }) )
+[3, 5, 7]
+[8, 11]
+[2, 9, 10]
+
+stolen from http://code.activestate.com/recipes/578272-topological-sort/
+
+"""
+
+    from functools import reduce
+
+    # Ignore self dependencies.
+    for k, v in data.items():
+        v.discard(k)
+    # Find all items that don't depend on anything.
+    extra_items_in_deps = reduce(set.union, data.itervalues()) - set(data.iterkeys())
+    # Add empty dependences where needed
+    data.update({item: set() for item in extra_items_in_deps})
+    while True:
+        ordered = set(item for item, dep in data.iteritems() if not dep)
+        if not ordered:
+            break
+        yield ordered
+        data = {item: (dep - ordered)
+                for item, dep in data.iteritems()
+                if item not in ordered}
+    assert not data, "Cyclic dependencies exist among these items:\n%s" % '\n'.join(repr(x) for x in data.iteritems())
+
+def stop_obj(s):
+    return {'stop_name': s.stop_name, 'stop_id': s.stop_id, 'times': {'0': {}, '1': {}}}
 
 def daterange(start_date, end_date):
     start_date = datetime.datetime.strptime(start_date, '%Y%m%d')
@@ -53,18 +84,29 @@ class Base(object):
 
         sched = transitfeed.Loader(os.path.join(self.datadir, 'gtfs.zip')).Load()
         routes = {}
+        route_graph = {}
         for route in sched.GetRouteList():
             if not wl or (wl and route.route_id in self.__class__.route_whitelist):
                 routes[route.route_id] = {'name': route.route_long_name, 'route': []}
+                route_graph[route.route_id] = {}
 
         for trip in sched.GetTripList():
             if not wl or (wl and trip.route_id in self.__class__.route_whitelist):
                 pattern = list(trip.GetPattern())
                 if trip.direction_id == '1':
                     pattern.reverse()
-                pattern = parse_pattern(pattern)
-                if routes[trip.route_id]['route'] != pattern:
-                    routes[trip.route_id]['route'] = merge_patterns(routes[trip.route_id]['route'], pattern)
+                d = route_graph[trip.route_id]
+                for i in range(len(pattern)-1):
+                    if d.get(pattern[i]['stop_id']):
+                        d[pattern[i]['stop_id']].add(pattern[i+1]['stop_id'])
+                    else:
+                        d[pattern[i]['stop_id']] = set([pattern[i+1]['stop_id']])
+
+        for route_id, stops in route_graph.iteritems():
+            l = []
+            for i in toposort2(stops):
+                l += i
+            routes[route_id]['route'] = [stop_obj(sched.GetStop(i)) for i in reversed(l)]
 
         for trip in sched.GetTripList():
             if not wl or (wl and trip.route_id in self.__class__.route_whitelist):
