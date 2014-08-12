@@ -44,8 +44,20 @@ stolen from http://code.activestate.com/recipes/578272-topological-sort/
                 if item not in ordered}
     assert not data, "Cyclic dependencies exist among these items:\n%s" % '\n'.join(repr(x) for x in data.iteritems())
 
-def stop_obj(s):
+def stop_dict(s):
     return {'stop_name': s.stop_name, 'stop_id': s.stop_id, 'times': {'0': {}, '1': {}}}
+
+def append_to_list_in_dict(d, key, val, remove=False):
+    if remove:
+        if d.get(key):
+            d[key].remove(val)
+        else:
+            d[key] = []
+    else:
+        if d.get(key):
+            d[key].append(val)
+        else:
+            d[key] = [val]
 
 def daterange(start_date, end_date):
     start_date = datetime.datetime.strptime(start_date, '%Y%m%d')
@@ -80,84 +92,84 @@ class Base(object):
         that you call this parent method first, and then use the data generated to build your other files"""
         import transitfeed
 
+        # do we have a whitelist?
         wl = bool(self.__class__.route_whitelist)
 
+        # load data into a schedule object
         sched = transitfeed.Loader(os.path.join(self.datadir, 'gtfs.zip')).Load()
         routes = {}
         route_graph = {}
+
+        # populate our route dictionaries
         for route in sched.GetRouteList():
-            if not wl or (wl and route.route_id in self.__class__.route_whitelist):
+            if not wl or (wl and route.route_id in self.__class__.route_whitelist):  # filter whitelist
                 routes[route.route_id] = {'name': route.route_long_name, 'route': []}
                 route_graph[route.route_id] = {}
 
+        # build our trip graph
+        # map of stop_id to set of next stop_ids
         for trip in sched.GetTripList():
-            if not wl or (wl and trip.route_id in self.__class__.route_whitelist):
+            if trip.route_id in routes:
                 pattern = list(trip.GetPattern())
                 if trip.direction_id == '1':
-                    pattern.reverse()
+                    pattern.reverse()  # only get stops going one way
                 d = route_graph[trip.route_id]
-                for i in range(len(pattern)-1):
+                for i in range(len(pattern)-1):  # don't do the last stop, it has no outgoing edge
                     if d.get(pattern[i]['stop_id']):
                         d[pattern[i]['stop_id']].add(pattern[i+1]['stop_id'])
                     else:
                         d[pattern[i]['stop_id']] = set([pattern[i+1]['stop_id']])
 
+        # build a list of stop_ids in order, then create the stop dicts
         for route_id, stops in route_graph.iteritems():
             l = []
-            for i in toposort2(stops):
+            for i in toposort2(stops):  # topological sort the graph to determine the order
                 l += i
-            routes[route_id]['route'] = [stop_obj(sched.GetStop(i)) for i in reversed(l)]
+            routes[route_id]['route'] = [stop_dict(sched.GetStop(i)) for i in reversed(l)]
 
-        for trip in sched.GetTripList():
-            if not wl or (wl and trip.route_id in self.__class__.route_whitelist):
+        # add the times
+        for trip in sched.GetTripList():  # every trip
+            if trip.route_id in routes:
                 times = trip.GetStopTimesTuples()
                 route = routes[trip.route_id]['route']
                 dir_id = str(trip.direction_id)
                 serv_id = str(trip.service_id)
-                for time in times:
+                for time in times:  # each stop on the trip
                     stop_id = time[3]
-                    for stop in route:
+                    for stop in route:  # look through every stop on route to find this stop
                         if not stop['times'][dir_id].get(trip.service_id):
                             stop['times'][dir_id][serv_id] = []
                         if stop['stop_id'] == stop_id:
                             # arrival time, trip id, train id
                             stop['times'][dir_id][serv_id].append((time[1], time[0], self.get_train_identifier(trip)))
+                            break  # we're done with this current stop, no need to loop through rest
 
         with open(os.path.join(self.datadir, 'routes'), 'w') as f:
             json.dump(routes, f)
 
+        # map of stop name: routes it serves
         stops = {}
         for k, v in routes.items():
             for stop in v['route']:
-                if stops.get(stop['stop_name']):
-                    stops[stop['stop_name']].append(k)
-                else:
-                    stops[stop['stop_name']] = [k]
+                append_to_list_in_dict(stops, stop['stop_name'], k)
 
         with open(os.path.join(self.datadir, 'stops'), 'w') as f:
             json.dump(stops, f)
 
+        # map of each day: applicable serivice periods
         dates = {}
         for sp in sched.GetServicePeriodList():
-            if sp.start_date:
+            if sp.start_date:  # this is a service period with a range of dates and weekdays defined
                 for date in daterange(sp.start_date, sp.end_date):
-                    if sp.day_of_week[date.weekday()]:
+                    if sp.day_of_week[date.weekday()]:  # add each day to the dict if its weekday is serviced
                         d = date.strftime('%Y%m%d')
-                        if dates.get(d):
-                            dates[d].append(sp.service_id)
-                        else:
-                            dates[d] = [sp.service_id]
-            for (id, date, extype) in sp.GetCalendarDatesFieldValuesTuples():
-                if extype == '1':
-                    if dates.get(date):
-                        dates[date].append(id)
-                    else:
-                        dates[date] = [id]
-                else:
-                    if dates.get(date):
-                        dates[date].remove(id)
-                    else:
-                        dates[date] = []
+                        append_to_list_in_dict(dates, d, sp.service_id)
+
+            for (id, date, extype) in sp.GetCalendarDatesFieldValuesTuples():  # special days
+                if extype == '1':  # add the day
+                    append_to_list_in_dict(dates, date, id)
+                else:  # remove the day
+                    append_to_list_in_dict(dates, date, id, remove=True)
 
         with open(os.path.join(self.datadir, 'dates'), 'w') as f:
             json.dump(dates, f)

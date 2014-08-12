@@ -21,13 +21,14 @@ class NJT(Base):
     route_whitelist = ['11', '10', '13', '15', '14', '17', '1', '3', '2', '5', '7', '6', '9', '8']  # no lightrail stuff
 
     def parse(self, depvision=False):
-        import csv
-
         super(NJT, self).parse()
         if depvision:
+            # map of stop name: departurevision stop code
             departurevision = {}
+            import csv
             with open(os.path.join(self.datadir, 'departurevision.csv')) as f:
                 for station, code in csv.reader(f):
+                    # match station names in csv to gtfs names
                     matches = []
                     for k in self.stops:
                         if station.lower() == k.lower():
@@ -38,6 +39,7 @@ class NJT(Base):
                     else:
                         if len(matches) == 1:
                             departurevision[matches[0]] = code
+                        # disambiguation
                         elif matches:
                             print 'Multiple found for', station, code
                             for i, j in enumerate(matches):
@@ -58,6 +60,7 @@ class NJT(Base):
             self.departurevision = json.load(f)
 
     def get_station_page(self, station):
+        # determine url and read it
         station = self.departurevision.get(station)
         if not station:
             return None, None
@@ -65,6 +68,7 @@ class NJT(Base):
         return urllib2.urlopen(url).read(), url
 
     def _get_departure_rows(self, station_page):
+        # get rows of data
         h = lxml.html.document_fromstring(station_page)
         t = h.get_element_by_id('GridView1')
         for row in t.getchildren()[1:]:
@@ -72,12 +76,14 @@ class NJT(Base):
             yield data
 
     def get_status(self, trip, orig, dest, station_page):
+        # get the status of a train
         for data in self._get_departure_rows(station_page):
             if trip['train'].lstrip('0') == data[4].text_content().strip():
                 return data[5].text_content().strip(), data[2].text_content().strip()
         return '', ''
 
     def train_list(self, station_page):
+        # get the list of trains still to arrive
         l = []
         for data in self._get_departure_rows(station_page):
             l.append(data[4].text_content().strip())

@@ -4,6 +4,7 @@ import os
 from util import iter_agencies, AmericanTimezone, norm_hour
 
 def find_stop(s, stops, station_replacements):
+    """parse stop list to find a stop"""
     s = s.lower()
     if s in station_replacements:
         return station_replacements[s]
@@ -14,41 +15,45 @@ def find_stop(s, stops, station_replacements):
         elif s in k.lower():
             matches.append(k)
     if len(matches) == 1:
-        return str(matches[0])
-    return list(map(str, matches))
+        return str(matches[0])  # if there is only one match, return it
+    return list(map(str, matches))  # a list of the matches
 
 def infer_stop(known, unknown, stops):
+    """figure out the stop based on the other's route"""
     known_routes = set(stops[known])
     unknown_routes = []
     for i in unknown:
         unknown_routes.append(set(stops[i]))
     for stop, iroutes in zip(unknown, unknown_routes):
-        if known_routes.intersection(iroutes):
+        if known_routes.intersection(iroutes):  # if the matched stop shares a line, return the stop
             return stop, list(known_routes.intersection(iroutes))
     return None, None
 
 
 def get_times_response(agency, orig, dest):
-    # step 1: figure out which stop they meant
+    # set variables we need
     orig = orig.replace('-', ' ')
     dest = dest.replace('-', ' ')
     nowt = datetime.datetime.now(AmericanTimezone(agency.tzoffset, agency.dst_observed))
     now = nowt.strftime('%H:%M:%S')
-    if nowt.hour < agency.timeswitch:
+    if nowt.hour < agency.timeswitch:  # use the previous day's schedule if it is the early morning
         nowt -= datetime.timedelta(days=1)
     today = nowt.strftime('%Y%m%d')
-    route_matches, trains = [], []
-    resp = {'failed': True, 'routes': [], 'now': now}
+    route_matches = []
+    resp = {'failed': True, 'routes': [], 'now': now}  # default of the response object
 
+    # find the stop names
     orig_eq = find_stop(orig, agency.stops, agency.station_replacements)
     dest_eq = find_stop(dest, agency.stops, agency.station_replacements)
 
+    # if they're both definite stops, find the routes that service both
     if (type(orig_eq) is str) and (type(dest_eq) is str):
         orig = orig_eq
         dest = dest_eq
         orig_routes = set(agency.stops[orig])
         dest_routes = set(agency.stops[dest])
         route_matches = list(orig_routes.intersection(dest_routes))
+    # else, figure out which stop they meant by looking at the other's route
     elif type(orig_eq) is list and type(dest_eq) is str:
         dest = dest_eq
         orig, route_matches = infer_stop(dest, orig_eq, agency.stops)
@@ -56,8 +61,9 @@ def get_times_response(agency, orig, dest):
         orig = orig_eq
         dest, route_matches = infer_stop(orig, dest_eq, agency.stops)
 
-    # step 2: look through each route and find the trains that go there
+    # look through each route and find the trains that go there
     if route_matches:
+        # get the realtime data
         status_page, station_url = agency.get_station_page(orig)
         status_page_trains = agency.train_list(status_page) if status_page else []
         for route in route_matches:
@@ -97,18 +103,19 @@ def get_times_response(agency, orig, dest):
                         dep_time = time
                         dep_trip = trip
                         dep_train = train
-                        trains.append(train)
                         break
                 for i, j, _ in dest_real_times:
                     if j == dep_trip:  # make sure the train actually stops on this trip
                         arr_time = i
                 if arr_time:
+                    # update the response object
                     resp['origin'] = agency.normalize_stop_name(orig)
                     resp['destination'] = agency.normalize_stop_name(dest)
                     resp['failed'] = False
                     resp['url'] = station_url
                     trip = {'line': route['name'], 'departure_time': dep_time,
                             'arrival_time': arr_time, 'train': dep_train}
+                    # get the status and track num from the data
                     status, track = agency.get_status(trip, orig, dest, status_page) if status_page else ('', '')
                     if type(status) is str:
                         trip['status'] = status.title()
