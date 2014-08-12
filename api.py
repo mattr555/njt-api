@@ -46,6 +46,8 @@ def get_times_response(agency, orig, dest):
     orig_eq = find_stop(orig, agency.stops, agency.station_replacements)
     dest_eq = find_stop(dest, agency.stops, agency.station_replacements)
 
+    orig_eq, dest_eq = agency.fix_pair(orig_eq, dest_eq)
+
     # if they're both definite stops, find the routes that service both
     if (type(orig_eq) is str) and (type(dest_eq) is str):
         orig = orig_eq
@@ -85,7 +87,7 @@ def get_times_response(agency, orig, dest):
             orig_real_times = []
             dest_real_times = []
             for i in periods:
-                if orig_times.get(i):
+                if orig_times.get(i) and dest_times.get(i):
                     orig_real_times += orig_times[i]
                     dest_real_times += dest_times[i]
 
@@ -95,7 +97,7 @@ def get_times_response(agency, orig, dest):
             # get the next 3 trains for each route
             train_count = 0
             while train_count < 3:
-                dep_time, dep_trip, arr_time, dep_train = (None,)*4
+                dep_time, dep_trip, dep_train, arr_time = (None,)*4
                 for i in range(len(orig_real_times)):
                     time, trip, train = orig_real_times.pop(0)
                     time = norm_hour(time)
@@ -167,5 +169,6 @@ def stops_handler(agency):
         return '\r\n'.join(agency.stops.keys() + agency.station_replacements.keys())
     raise bottle.HTTPError(404)
 
+bottle.debug(True)
 bottle.run(server='gae')
 application = bottle.app()

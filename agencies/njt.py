@@ -59,6 +59,11 @@ class NJT(Base):
         with open(os.path.join(self.datadir, 'dv')) as f:
             self.departurevision = json.load(f)
 
+    def fix_pair(self, orig, dest):
+        if orig == "HOBOKEN" and "FRANK R LAUTENBERG SECAUCUS LOWER LEVEL" in dest:
+            return "HOBOKEN", "FRANK R LAUTENBERG SECAUCUS LOWER LEVEL"
+        return orig, dest
+
     def get_station_page(self, station):
         # determine url and read it
         station = self.departurevision.get(station)

@@ -1,4 +1,3 @@
-from __future__ import division
 import os
 import json
 import datetime
@@ -198,6 +197,10 @@ class Base(object):
             if i.title() in s:
                 s = s.replace(i.title(), i)
         return s.replace('station', "Station")
+
+    def fix_pair(self, orig, dest):
+        """perform any special case handling here"""
+        return orig, dest
 
     def get_station_page(self, station):
         """this method takes a station name (str) and returns data from an api (any type)
