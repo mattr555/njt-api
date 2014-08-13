@@ -1,6 +1,5 @@
 import datetime
-import sys
-import os
+from lib import bottle
 from util import iter_agencies, AmericanTimezone, norm_hour
 
 def find_stop(s, stops, station_replacements):
@@ -131,8 +130,6 @@ def get_times_response(agency, orig, dest):
 
     return resp
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
-import bottle
 
 @bottle.route('/')
 def index():
@@ -155,20 +152,25 @@ def get_agency(name):
             return agency
     return None
 
-@bottle.route('/:agency/times/:orig/:dest')
+@bottle.route('/<agency>/times/<orig>/<dest>')
 def times_handler(agency, orig, dest):
     agency = get_agency(agency)
     if agency:
         return get_times_response(agency, orig, dest)
     raise bottle.HTTPError(404)
 
-@bottle.route('/:agency/stops')
-def stops_handler(agency):
+@bottle.route('/<agency>/stops')
+@bottle.route('/<agency>/stops/<route>')
+def stops_handler(agency, route=None):
     agency = get_agency(agency)
-    if agency:
+    if agency and not route:
         return '\r\n'.join(agency.stops.keys() + agency.station_replacements.keys())
     raise bottle.HTTPError(404)
 
 bottle.debug(True)
-bottle.run(server='gae')
-application = bottle.app()
+
+if __name__ == "__main__":
+    bottle.run(host='localhost', port=8080)
+else:
+    bottle.run(server='gae')
+    application = bottle.app()

@@ -89,7 +89,7 @@ class Base(object):
 
         Any files needed to be generated to use realtime apis should be created here. It is suggested
         that you call this parent method first, and then use the data generated to build your other files"""
-        import transitfeed
+        from lib import transitfeed
 
         # do we have a whitelist?
         wl = bool(self.__class__.route_whitelist)

@@ -1,11 +1,9 @@
 from util import avail_agencies
-import sys
-import os
+from lib import transitfeed
 import argparse
 import importlib
 from agencies.base import Base
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 avail = avail_agencies()
 
 parser = argparse.ArgumentParser()

@@ -1,8 +1,8 @@
 *.pyc
-**/routes
-**/stops
-**/dates
-**/gtfs.zip
+data/*/routes
+data/*/stops
+data/*/dates
+data/*/gtfs.zip
 keys.py
 **/*~
 lib
