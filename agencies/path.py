@@ -5,6 +5,7 @@ class PATH(Base):
     station_replacements = {
         'wtc': 'World Trade Center',
         'jsq': 'Journal Square',
-        'nwk': 'Newark Penn Station'
+        'nwk': 'Newark Penn Station',
+        'pavonia': 'Newport'
     }
     timeswitch = 0
